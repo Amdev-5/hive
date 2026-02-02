@@ -38,6 +38,7 @@ from .file_system_toolkits.replace_file_content import (
 # Import file system toolkits
 from .file_system_toolkits.view_file import register_tools as register_view_file
 from .file_system_toolkits.write_to_file import register_tools as register_write_to_file
+from .calcom_tool import register_tools as register_calcom
 from .hubspot_tool import register_tools as register_hubspot
 from .pdf_read_tool import register_tools as register_pdf_read
 from .web_scrape_tool import register_tools as register_web_scrape
@@ -70,6 +71,7 @@ def register_all_tools(
     # email supports multiple providers (Resend) with auto-detection
     register_email(mcp, credentials=credentials)
     register_hubspot(mcp, credentials=credentials)
+    register_calcom(mcp, credentials=credentials)
 
     # Register file system toolkits
     register_view_file(mcp)
@@ -114,6 +116,14 @@ def register_all_tools(
         "hubspot_get_deal",
         "hubspot_create_deal",
         "hubspot_update_deal",
+        "calcom_list_bookings",
+        "calcom_get_booking",
+        "calcom_create_booking",
+        "calcom_cancel_booking",
+        "calcom_get_availability",
+        "calcom_update_schedule",
+        "calcom_list_event_types",
+        "calcom_get_event_type",
     ]
 
 
