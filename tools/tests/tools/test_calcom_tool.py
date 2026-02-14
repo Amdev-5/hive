@@ -70,6 +70,19 @@ class TestCredentialHandling:
         assert "not configured" in result["error"]
         assert "help" in result
 
+    def test_non_string_credential_returns_error(self, mcp: FastMCP, monkeypatch):
+        """Non-string credential returns error dict instead of raising."""
+        monkeypatch.delenv("CALCOM_API_KEY", raising=False)
+        creds = MagicMock()
+        creds.get.return_value = 12345  # non-string
+        register_tools(mcp, credentials=creds)
+
+        fn = mcp._tool_manager._tools["calcom_list_bookings"].fn
+        result = fn()
+
+        assert "error" in result
+        assert "not configured" in result["error"]
+
     def test_credentials_from_env(self, mcp: FastMCP, monkeypatch):
         """Tools use credentials from environment variable."""
         monkeypatch.setenv("CALCOM_API_KEY", "test-key")
@@ -193,7 +206,7 @@ class TestCreateBooking:
             json_data = call_kwargs.kwargs.get("json", {})
             assert json_data.get("language") == "en"
             assert json_data.get("metadata") == {}
-            assert json_data["responses"]["metadata"] == {}
+            assert "metadata" not in json_data["responses"]
 
     def test_create_booking_missing_required_fields(self, calcom_tools):
         """Create booking returns error for missing required fields."""
@@ -275,6 +288,25 @@ class TestGetAvailability:
         )
 
         assert "error" in result
+
+
+class TestUpdateSchedule:
+    """Tests for calcom_update_schedule tool."""
+
+    def test_update_schedule_with_availability(self, calcom_tools):
+        """Update schedule passes availability to the API."""
+        with patch("httpx.patch") as mock_patch:
+            mock_response = MagicMock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {"schedule": {"id": 1}}
+            mock_patch.return_value = mock_response
+
+            avail = [{"days": [1, 2, 3, 4, 5], "startTime": "09:00", "endTime": "17:00"}]
+            calcom_tools["update_schedule"](schedule_id=1, availability=avail)
+
+            call_kwargs = mock_patch.call_args
+            json_data = call_kwargs.kwargs.get("json", {})
+            assert json_data["availability"] == avail
 
 
 class TestListEventTypes:
